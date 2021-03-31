@@ -1,8 +1,9 @@
+// ignore_for_file: prefer_void_to_null
 import 'dart:io';
 
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:conduit_isolate_exec/conduit_isolate_exec.dart';
-import 'package:runtime/runtime.dart';
+import 'package:conduit_runtime/runtime.dart';
 
 import 'build_context.dart';
 
@@ -48,19 +49,20 @@ class BuildManager {
         .where((f) => f.name.name == "main")
         .toList();
 
-    mainFunctions.reversed.forEach((f) {
+    for (final f in mainFunctions.reversed) {
       scriptSource = scriptSource.replaceRange(f.offset, f.end, "");
-    });
+    }
 
     strippedScriptFile.writeAsStringSync(scriptSource);
-
-    await IsolateExecutor.run(BuildExecutable(context.safeMap),
-        packageConfigURI: sourceDirectoryUri.resolve(".packages"),
-        imports: [
-          "package:runtime/runtime.dart",
-          context.targetScriptFileUri.toString()
-        ],
-        logHandler: (s) => print(s));
+    await IsolateExecutor.run(
+      BuildExecutable(context.safeMap),
+      packageConfigURI: sourceDirectoryUri.resolve(".packages"),
+      imports: [
+        "package:conduit_runtime/runtime.dart",
+        context.targetScriptFileUri.toString()
+      ],
+      logHandler: (s) => print(s), //ignore: avoid_print
+    );
   }
 
   Future clean() async {

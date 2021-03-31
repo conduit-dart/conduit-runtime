@@ -1,4 +1,5 @@
-import 'package:runtime/src/exceptions.dart';
+// ignore_for_file: avoid_catching_errors
+import 'package:conduit_runtime/src/exceptions.dart';
 
 const String _listPrefix = "List<";
 const String _mapPrefix = "Map<String,";
@@ -39,17 +40,9 @@ T cast<T>(dynamic input) {
       } else if (typeString.startsWith("List<bool?>")) {
         return List<bool?>.from(input) as T;
       } else if (typeString.startsWith("List<Map<String, dynamic>>")) {
-        final objects = <Map<String, dynamic>>[];
-        input.forEach((o) {
-          objects.add(o);
-        });
-        return objects as T;
+        return List<Map<String, dynamic>>.from(input) as T;
       } else if (typeString.startsWith("List<Map<String, dynamic>?>")) {
-        final objects = <Map<String, dynamic>?>[];
-        input.forEach((o) {
-          objects.add(o);
-        });
-        return objects as T;
+        return List<Map<String, dynamic>?>.from(input) as T;
       }
     } else if (typeString.startsWith(_mapPrefix)) {
       if (input is! Map) {
@@ -81,7 +74,7 @@ T cast<T>(dynamic input) {
     }
 
     return input as T;
-  } on TypeError {
+  } on TypeError catch (_) {
     throw TypeCoercionException(T, input.runtimeType);
   }
 }

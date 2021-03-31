@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:runtime/runtime.dart';
+import 'package:conduit_runtime/runtime.dart';
 import 'package:test/test.dart';
 
 /*
@@ -80,7 +80,7 @@ void main() {
 Future<String> dart(Uri workingDir) async {
   final result = await Process.run("dart", ["bin/main.dart"],
       workingDirectory: workingDir.toFilePath(windows: Platform.isWindows),
-      runInShell: true);
+      runInShell: true,);
   return result.stdout.toString();
 }
 

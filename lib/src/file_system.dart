@@ -28,14 +28,18 @@ void copyDirectory({required Uri src, required Uri dst}) {
 ///
 /// If locations on disk are relative Uris, they are resolved by [relativeTo]. [relativeTo] defaults
 /// to the CWD.
-Map<String, Uri> getResolvedPackageUris(Uri packagesFileUri,
-    {Uri? relativeTo}) {
-  relativeTo ??= Directory.current.uri;
+Map<String, Uri> getResolvedPackageUris(
+  Uri packagesFileUri, {
+  Uri? relativeTo,
+}) {
+  final _relativeTo = relativeTo ?? Directory.current.uri;
 
   final packagesFile = File.fromUri(packagesFileUri);
   if (!packagesFile.existsSync()) {
     throw StateError(
-        "No .packages file found at '${packagesFileUri}'. Run 'pub get' in directory '${packagesFileUri.resolve("../")}'.");
+      "No .packages file found at '$packagesFileUri'. "
+      "Run 'pub get' in directory '${packagesFileUri.resolve('../')}'.",
+    );
   }
   return Map.fromEntries(packagesFile
       .readAsStringSync()
@@ -52,7 +56,7 @@ Map<String, Uri> getResolvedPackageUris(Uri packagesFileUri,
 
     return MapEntry(
         packageName,
-        Directory.fromUri(relativeTo!.resolveUri(uri).normalizePath())
+        Directory.fromUri(_relativeTo.resolveUri(uri).normalizePath())
             .parent
             .uri);
   }));
