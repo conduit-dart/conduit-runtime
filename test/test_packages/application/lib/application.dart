@@ -7,8 +7,4 @@ import 'package:dependency/dependency.dart';
 
 import 'src/file.dart';
 
-class ConsumerSubclass extends Consumer {
-
-}
-
-
+class ConsumerSubclass extends Consumer {}

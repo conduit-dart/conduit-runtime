@@ -9,15 +9,20 @@ Future main(List<String> args) async {
   parser.addOption('build-directory',
       abbr: "b",
       help:
-          "Path to directory to store build artifacts (created by this script)", defaultsTo: "_build/");
+          "Path to directory to store build artifacts (created by this script)",
+      defaultsTo: "_build/");
   parser.addOption('output-file',
-      abbr: "o", help: "Path to executable output of script", defaultsTo: 'runtime');
+      abbr: "o",
+      help: "Path to executable output of script",
+      defaultsTo: 'runtime');
   parser.addOption('script',
       abbr: "s",
       help:
-          "Path to the .dart script file to compile (contains a main function)", defaultsTo: "bin/main.dart");
+          "Path to the .dart script file to compile (contains a main function)",
+      defaultsTo: "bin/main.dart");
   parser.addFlag('test',
-      abbr: "t", help: "Include dev_dependencies when compiling, writes script as test");
+      abbr: "t",
+      help: "Include dev_dependencies when compiling, writes script as test");
 
   final results = parser.parse(args);
 
