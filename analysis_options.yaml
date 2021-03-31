@@ -1,1 +1,2 @@
 include: package:lint/analysis_options.yaml
+exclude: test/test_packages
