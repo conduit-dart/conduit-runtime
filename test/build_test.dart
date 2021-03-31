@@ -56,7 +56,7 @@ void main() {
     expect(json.decode(output), {
       "Consumer": "mirrored",
       "ConsumerSubclass": "mirrored",
-      "ConsumerScript": "mirrored"
+      "ConsumerScript": "mirrored",
     });
   });
 
@@ -72,15 +72,18 @@ void main() {
     expect(json.decode(output), {
       "Consumer": "generated",
       "ConsumerSubclass": "generated",
-      "ConsumerScript": "generated"
+      "ConsumerScript": "generated",
     });
   });
 }
 
 Future<String> dart(Uri workingDir) async {
-  final result = await Process.run("dart", ["bin/main.dart"],
-      workingDirectory: workingDir.toFilePath(windows: Platform.isWindows),
-      runInShell: true,);
+  final result = await Process.run(
+    "dart",
+    ["bin/main.dart"],
+    workingDirectory: workingDir.toFilePath(windows: Platform.isWindows),
+    runInShell: true,
+  );
   return result.stdout.toString();
 }
 
