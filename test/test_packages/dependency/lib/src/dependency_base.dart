@@ -1,8 +1,8 @@
 import 'package:conduit_runtime/runtime.dart';
 
-
 class Consumer {
-  String get message => (RuntimeContext.current[runtimeType] as ConsumerRuntime).message;
+  String get message =>
+      (RuntimeContext.current[runtimeType] as ConsumerRuntime).message;
 }
 
 abstract class ConsumerRuntime {

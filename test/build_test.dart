@@ -53,8 +53,11 @@ void main() {
         .resolve("test/")
         .resolve("test_packages/")
         .resolve("application/"));
-    expect(json.decode(output),
-        {"Consumer": "mirrored", "ConsumerSubclass": "mirrored", "ConsumerScript": "mirrored"});
+    expect(json.decode(output), {
+      "Consumer": "mirrored",
+      "ConsumerSubclass": "mirrored",
+      "ConsumerScript": "mirrored"
+    });
   });
 
   test(
@@ -66,8 +69,11 @@ void main() {
             .resolve("test/")
             .resolve("test_packages/")
             .resolve("application/"));
-    expect(json.decode(output),
-        {"Consumer": "generated", "ConsumerSubclass": "generated", "ConsumerScript": "generated"});
+    expect(json.decode(output), {
+      "Consumer": "generated",
+      "ConsumerSubclass": "generated",
+      "ConsumerScript": "generated"
+    });
   });
 }
 
