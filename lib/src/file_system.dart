@@ -1,11 +1,9 @@
 import 'dart:io';
 
-import 'package:meta/meta.dart';
-
 /// Recursively copies the contents of the directory at [src] to [dst].
 ///
 /// Creates directory at [dst] recursively if it doesn't exist.
-void copyDirectory({@required Uri src, @required Uri dst}) {
+void copyDirectory({required Uri src, required Uri dst}) {
   final srcDir = Directory.fromUri(src);
   final dstDir = Directory.fromUri(dst);
   if (!dstDir.existsSync()) {
@@ -30,13 +28,18 @@ void copyDirectory({@required Uri src, @required Uri dst}) {
 ///
 /// If locations on disk are relative Uris, they are resolved by [relativeTo]. [relativeTo] defaults
 /// to the CWD.
-Map<String, Uri> getResolvedPackageUris(Uri packagesFileUri, {Uri relativeTo}) {
-  relativeTo ??= Directory.current.uri;
+Map<String, Uri> getResolvedPackageUris(
+  Uri packagesFileUri, {
+  Uri? relativeTo,
+}) {
+  final _relativeTo = relativeTo ?? Directory.current.uri;
 
   final packagesFile = File.fromUri(packagesFileUri);
   if (!packagesFile.existsSync()) {
     throw StateError(
-        "No .packages file found at '${packagesFileUri}'. Run 'pub get' in directory '${packagesFileUri.resolve("../")}'.");
+      "No .packages file found at '$packagesFileUri'. "
+      "Run 'pub get' in directory '${packagesFileUri.resolve('../')}'.",
+    );
   }
   return Map.fromEntries(packagesFile
       .readAsStringSync()
@@ -53,7 +56,7 @@ Map<String, Uri> getResolvedPackageUris(Uri packagesFileUri, {Uri relativeTo}) {
 
     return MapEntry(
         packageName,
-        Directory.fromUri(relativeTo.resolveUri(uri).normalizePath())
+        Directory.fromUri(_relativeTo.resolveUri(uri).normalizePath())
             .parent
             .uri);
   }));

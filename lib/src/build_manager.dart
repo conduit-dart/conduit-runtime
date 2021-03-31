@@ -1,8 +1,9 @@
+// ignore_for_file: prefer_void_to_null
 import 'dart:io';
 
 import 'package:analyzer/dart/ast/ast.dart';
-import 'package:isolate_executor/isolate_executor.dart';
-import 'package:runtime/runtime.dart';
+import 'package:conduit_isolate_exec/conduit_isolate_exec.dart';
+import 'package:conduit_runtime/runtime.dart';
 
 import 'build_context.dart';
 
@@ -11,7 +12,7 @@ class BuildExecutable extends Executable<Null> {
     context = BuildContext.fromMap(message);
   }
 
-  BuildContext context;
+  late BuildContext context;
 
   @override
   Future<Null> execute() async {
@@ -36,10 +37,8 @@ class BuildManager {
     // Here is where we need to provide a temporary copy of the script file with the main function stripped;
     // this is because when the RuntimeGenerator loads, it needs Mirror access to any declarations in this file
     var scriptSource = context.source;
-    final strippedScriptFile =
-        File.fromUri(context.targetScriptFileUri)
-          ..writeAsStringSync(scriptSource);
-
+    final strippedScriptFile = File.fromUri(context.targetScriptFileUri)
+      ..writeAsStringSync(scriptSource);
     final analyzer = CodeAnalyzer(strippedScriptFile.absolute.uri);
     final analyzerContext = analyzer.contexts.contextFor(analyzer.path);
     final mainFunctions = analyzerContext.currentSession
@@ -50,19 +49,20 @@ class BuildManager {
         .where((f) => f.name.name == "main")
         .toList();
 
-    mainFunctions.reversed.forEach((f) {
+    for (final f in mainFunctions.reversed) {
       scriptSource = scriptSource.replaceRange(f.offset, f.end, "");
-    });
+    }
 
     strippedScriptFile.writeAsStringSync(scriptSource);
-
-    await IsolateExecutor.run(BuildExecutable(context.safeMap),
-        packageConfigURI: sourceDirectoryUri.resolve(".packages"),
-        imports: [
-          "package:runtime/runtime.dart",
-          context.targetScriptFileUri.toString()
-        ],
-        logHandler: (s) => print(s));
+    await IsolateExecutor.run(
+      BuildExecutable(context.safeMap),
+      packageConfigURI: sourceDirectoryUri.resolve(".packages"),
+      imports: [
+        "package:conduit_runtime/runtime.dart",
+        context.targetScriptFileUri.toString()
+      ],
+      logHandler: (s) => print(s), //ignore: avoid_print
+    );
   }
 
   Future clean() async {

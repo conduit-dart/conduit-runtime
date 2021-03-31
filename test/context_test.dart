@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:runtime/runtime.dart';
+import 'package:conduit_runtime/runtime.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -10,7 +10,7 @@ void main() {
       .resolve("application/")
       .resolve("lib/")
       .toFilePath();
-  BuildContext ctx;
+  late BuildContext ctx;
 
   setUpAll(() async {
     final cmd = Platform.isWindows ? "pub.bat" : "pub";
@@ -51,11 +51,9 @@ void main() {
   test("Get import directives using double quotes", () {
     final imports = ctx.getImportDirectives(
         source:
-            "import \"package:foo/foo.dart\";\n import \"package:bar2/bar_.dart\"; class Foobar {}");
-    expect(imports, [
-      "import \"package:foo/foo.dart\";",
-      "import \"package:bar2/bar_.dart\";"
-    ]);
+            "import 'package:foo/foo.dart';\n import 'package:bar2/bar_.dart'; class Foobar {}");
+    expect(imports,
+        ["import 'package:foo/foo.dart';", "import 'package:bar2/bar_.dart';"]);
   });
 
   test("Find in file", () {

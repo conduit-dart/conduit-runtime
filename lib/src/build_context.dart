@@ -2,29 +2,34 @@ import 'dart:io';
 import 'dart:mirrors';
 
 import 'package:analyzer/dart/ast/ast.dart';
-import 'package:pubspec_parse/pubspec_parse.dart';
-import 'package:runtime/src/analyzer.dart';
-import 'package:runtime/src/context.dart';
-import 'package:runtime/src/file_system.dart';
-import 'package:runtime/src/mirror_context.dart';
+import 'package:pubspec/pubspec.dart';
+import 'package:conduit_runtime/src/analyzer.dart';
+import 'package:conduit_runtime/src/context.dart';
+import 'package:conduit_runtime/src/file_system.dart';
+import 'package:conduit_runtime/src/mirror_context.dart';
 import 'package:yaml/yaml.dart';
+import 'package:path/path.dart';
 
 /// Configuration and context values used during [Build.execute].
 class BuildContext {
-  BuildContext(this.rootLibraryFileUri, this.buildDirectoryUri,
-      this.executableUri, this.source,
-      {bool forTests})
-      : this.forTests = forTests ?? false {
+  BuildContext(
+    this.rootLibraryFileUri,
+    this.buildDirectoryUri,
+    this.executableUri,
+    this.source, {
+    this.forTests = false,
+  }) {
     analyzer = CodeAnalyzer(sourceApplicationDirectory.uri);
   }
 
-  factory BuildContext.fromMap(Map map) {
+  factory BuildContext.fromMap(Map<String, dynamic> map) {
     return BuildContext(
-        Uri.parse(map['rootLibraryFileUri']),
-        Uri.parse(map['buildDirectoryUri']),
-        Uri.parse(map['executableUri']),
-        map['source'],
-        forTests: map['forTests']);
+      Uri.parse(map['rootLibraryFileUri'] as String),
+      Uri.parse(map['buildDirectoryUri'] as String),
+      Uri.parse(map['executableUri'] as String),
+      map['source'] as String,
+      forTests: map['forTests'] as bool? ?? false,
+    );
   }
 
   Map<String, dynamic> get safeMap => {
@@ -35,7 +40,7 @@ class BuildContext {
         'forTests': forTests
       };
 
-  CodeAnalyzer analyzer;
+  late CodeAnalyzer analyzer;
 
   /// A [Uri] to the library file of the application to be compiled.
   final Uri rootLibraryFileUri;
@@ -61,13 +66,15 @@ class BuildContext {
           .resolve("main_test.dart")
       : buildDirectoryUri.resolve("main.dart");
 
-  Pubspec get sourceApplicationPubspec => Pubspec.parse(
-      File.fromUri(sourceApplicationDirectory.uri.resolve("pubspec.yaml"))
-          .readAsStringSync());
+  PubSpec get sourceApplicationPubspec => PubSpec.fromYamlString(
+        File.fromUri(sourceApplicationDirectory.uri.resolve("pubspec.yaml"))
+            .readAsStringSync(),
+      );
 
-  Map<dynamic, dynamic> get sourceApplicationPubspecMap => loadYaml(
-      File.fromUri(sourceApplicationDirectory.uri.resolve("pubspec.yaml"))
-          .readAsStringSync());
+  Map<dynamic, dynamic> get sourceApplicationPubspecMap =>
+      loadYaml(File.fromUri(
+        sourceApplicationDirectory.uri.resolve("pubspec.yaml"),
+      ).readAsStringSync()) as Map<dynamic, dynamic>;
 
   /// The directory of the application being compiled.
   Directory get sourceApplicationDirectory =>
@@ -117,11 +124,14 @@ class BuildContext {
     return file;
   }
 
-  Uri resolveUri(Uri uri) {
+  Uri? resolveUri(Uri? uri) {
+    if (uri == null) {
+      return null;
+    }
     var outputUri = uri;
-    if (outputUri?.scheme == "package") {
+    if (outputUri.scheme == "package") {
       final segments = outputUri.pathSegments;
-      outputUri = resolvedPackages[segments.first].resolve("lib/");
+      outputUri = resolvedPackages[segments.first]!.resolve("lib/");
       for (var i = 1; i < segments.length; i++) {
         if (i < segments.length - 1) {
           outputUri = outputUri.resolve("${segments[i]}/");
@@ -129,15 +139,18 @@ class BuildContext {
           outputUri = outputUri.resolve(segments[i]);
         }
       }
-    } else if (outputUri != null && !outputUri.isAbsolute) {
+    } else if (!outputUri.isAbsolute) {
       throw ArgumentError("'uri' must be absolute or a package URI");
     }
 
     return outputUri;
   }
 
-  List<String> getImportDirectives(
-      {Uri uri, String source, bool alsoImportOriginalFile = false}) {
+  List<String> getImportDirectives({
+    Uri? uri,
+    String? source,
+    bool alsoImportOriginalFile = false,
+  }) {
     if (uri != null && source != null) {
       throw ArgumentError(
           "either uri or source must be non-null, but not both");
@@ -153,23 +166,23 @@ class BuildContext {
           "flag 'alsoImportOriginalFile' may only be set if 'uri' is also set");
     }
 
-    var fileUri = resolveUri(uri);
-    final text = source ?? File.fromUri(fileUri).readAsStringSync();
+    final fileUri = resolveUri(uri);
+    final text = source ?? File.fromUri(fileUri!).readAsStringSync();
     final importRegex = RegExp("import [\\'\\\"]([^\\'\\\"]*)[\\'\\\"];");
 
     final imports = importRegex.allMatches(text).map((m) {
-      var importedUri = Uri.parse(m.group(1));
-      if (importedUri.scheme != "package" && !importedUri.isAbsolute) {
-        throw ArgumentError(
-            "Cannot resolve relative URIs in file located at $uri. "
-            "Replace imported URIs with package or absolute URIs");
+      final importedUri = Uri.parse(m.group(1)!);
+
+      if (!importedUri.isAbsolute) {
+        final path = fileUri!.resolve(importedUri.path);
+        return "import 'file:${absolute(path.path)}';";
       }
 
       return text.substring(m.start, m.end);
     }).toList();
 
     if (alsoImportOriginalFile) {
-      imports.add("import '${uri}';");
+      imports.add("import '$uri';");
     }
 
     return imports;
@@ -178,8 +191,9 @@ class BuildContext {
   ClassDeclaration getClassDeclarationFromType(Type type) {
     final classMirror = reflectType(type);
     return analyzer.getClassFromFile(
-        MirrorSystem.getName(classMirror.simpleName),
-        resolveUri(classMirror.location.sourceUri));
+      MirrorSystem.getName(classMirror.simpleName),
+      resolveUri(classMirror.location!.sourceUri)!,
+    );
   }
 
   List<Annotation> getAnnotationsFromField(Type _type, String propertyName) {
@@ -187,7 +201,7 @@ class BuildContext {
     var field =
         getClassDeclarationFromType(type.reflectedType).getField(propertyName);
     while (field == null) {
-      type = type.superclass;
+      type = type.superclass!;
       if (type.reflectedType == Object) {
         break;
       }
@@ -195,6 +209,6 @@ class BuildContext {
           .getField(propertyName);
     }
 
-    return (field.parent.parent as FieldDeclaration).metadata.toList();
+    return (field!.parent!.parent! as FieldDeclaration).metadata.toList();
   }
 }
