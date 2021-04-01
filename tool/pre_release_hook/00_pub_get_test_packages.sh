@@ -1,8 +1,8 @@
 #!/bin/bash
-push test/test_packages/dependency
+pushd test/test_packages/dependency
 dart pub get
 popd
 
-push test/test_packages/application
+pushd test/test_packages/application
 dart pub get
 popd
