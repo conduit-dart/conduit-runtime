@@ -33,7 +33,8 @@ class CodeAnalyzer {
         return _resolvedAsts[path]!;
       }
 
-      final output = await ctx.currentSession.getResolvedUnit(path);
+      final output =
+          await ctx.currentSession.getResolvedUnit2(path) as ResolvedUnitResult;
       if (output.state == ResultState.VALID) {
         _resolvedAsts[path] = output;
         return output;
@@ -66,7 +67,8 @@ class CodeAnalyzer {
       return _resolvedAsts[path]!.unit!;
     }
 
-    final unit = contexts.contextFor(path).currentSession.getParsedUnit(path);
+    final unit = contexts.contextFor(path).currentSession.getParsedUnit2(path)
+        as ParsedUnitResult;
     if (unit.errors.isNotEmpty) {
       throw StateError(
         "Project file '$path' could not be analysed for the "
